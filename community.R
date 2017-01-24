@@ -15,12 +15,16 @@ sqrd.diffs<- function(soil.system) {
   yj.bar<-colMeans(soil.system)
   for(i in 1:nrow(soil.system)){
     for(j in 1:ncol(soil.system)){
-      soil.system[i,j]<-(soil.system[i,j]-yj.bar[j])**2
+      soil.system[i,j]<-(soil.system[i,j]-yj.bar[j])^2
     }
   }
   return(soil.system)
 }
 
+# Will says: this needs to be done on the square differences, not the
+# input matrix. Thus this function isn't "wrong", but it's not *right*
+# unless you use it with the output from sqrd.diffs ...which I now see
+# that you new judging by your wrapper. Carry on...
 total.sum.sqrs<-function(soil.system){
   #Legendre(2)
   n.sum<-rowSums(soil.system)
@@ -48,9 +52,11 @@ species.cont.bdiv<-function(soil.system){
   return(scbd)
 }
 
+# Will:s you should calculate this for all the cores, and return the
+# contributions for all the cores
 sample.ss<-function(soil.system, core){
   #Legendre(5a)
-  sample.sum.sqrs<-sum(soil.system[core])
+  sample.sum.sqrs<-sum(soil.system[core]) # Will: should this be ",core"? (a bit moot now anyway :p)
   return(sample.sum.sqrs)
 }
 
@@ -61,11 +67,22 @@ local.cont.bdiv<-function(soil.system, core){
   return(lcbd)
 }
 
+## Will: give me a nicer name please :D
+## ...and make three functions:
+## (1) calc. species contributions
+## (2) calc. site contributions
+## (3) calc. total variance in system.
+## ... you could write some sort of nice wrapper for all these things
+## if you wished; I don't really mind :D
 wrapper<-function(soil.system){
   soil.system<-sqrd.diffs(soil.system)
   ss.tot<-total.sum.sqrs(soil.system)
   return(ss.tot)
 }
 
-
-
+## ...just one more thing...
+## Write unit tests for this, that include:
+## (1) a stated dataset with values for it (something small and with
+##     just 1s and zeroes that isn't random)
+## (2) that use the way that the three arrows in equations 2, 4, and 5
+##     should converge to build tests
