@@ -1,71 +1,61 @@
-#'initializing the community data table (Y) with any number of samples
-#'   contains any amount of species or OTUs. For now this is just an
-#'   example with random data until I figure out how to use the  
-#'   sequence data to represent whether the otu is present or absent.
-sys.comp<-function(cores, otu){
-  comm.tbl<-matrix(sample(0:1,cores*otu,replace=TRUE),nrow = cores, ncol = otu)
-  return(comm.tbl)
-}
 #'The following is calculating the total sum of squares and the 
-#' index of beta diversity. This may have to altered in the future
-#' but for the time being, I think this will function for it's 
-#' purposes.
+#' index of beta diversity.
 sqrd.diffs<- function(soil.system) {
   #Legendre(1)
   yj.bar<-colMeans(soil.system)
   for(i in 1:nrow(soil.system)){
     for(j in 1:ncol(soil.system)){
-      soil.system[i,j]<-(soil.system[i,j]-yj.bar[j])**2
+      soil.system[i,j]<-(soil.system[i,j]-yj.bar[j])^2
     }
   }
   return(soil.system)
 }
 
-total.sum.sqrs<-function(soil.system){
+total.sum.sqrs<-function(system.sum.sqrs){
   #Legendre(2)
-  n.sum<-rowSums(soil.system)
-  p.sum<-colSums(soil.system)
-  ss.tot<-(sum(n.sum)+sum(p.sum))
+  p.sum<-colSums(system.sum.sqrs)
+  ss.tot<-(sum(p.sum))
   return(ss.tot)
 }
-
+#'This calculates the total beta diversity (BD.total) or the variance of the 
+#'  entire system.
 b.div<-function(soil.system){
   #Legendre(3)
-  bd.tot<-(ss.tot/(nrow(soil.system)-1))
+  bd.tot<-(total.sum.sqrs(soil.system)/(nrow(soil.system)-1))
   return(bd.tot)
 }
 
-species.ss<-function(soil.system){
+species.ss<-function(system.sum.sqrs){
   #Legendre(4a)
-  species.sum.sqrs<-colSums(soil.system)
+  species.sum.sqrs<-colSums(system.sum.sqrs)
   return(species.sum.sqrs)
 }
 
-species.cont.bdiv<-function(soil.system){
+species.cont.bdiv<-function(system.sum.sqrs){
   #Legendre(4b)
-  ss.j<-species.ss(soil.system)
-  scbd<-(ss.j/total.sum.sqrs(soil.system))
+  ss.j<-species.ss(system.sum.sqrs)
+  scbd<-(ss.j/total.sum.sqrs(system.sum.sqrs))
   return(scbd)
 }
 
-sample.ss<-function(soil.system, core){
+sample.ss<-function(system.sum.sqrs){
   #Legendre(5a)
-  sample.sum.sqrs<-sum(soil.system[core])
+  sample.sum.sqrs<-rowSums(system.sum.sqrs)
   return(sample.sum.sqrs)
 }
 
-local.cont.bdiv<-function(soil.system, core){
+local.cont.bdiv<-function(system.sum.sqrs){
   #Legendre(5b)
-  ss.i<-sample.ss(soil.system, core)
-  lcbd<-(ss.i/total.sum.sqrs(soil.system))
+  ss.i<-sample.ss(system.sum.sqrs)
+  lcbd<-(ss.i/total.sum.sqrs(system.sum.sqrs))
   return(lcbd)
 }
 
-wrapper<-function(soil.system){
-  soil.system<-sqrd.diffs(soil.system)
-  ss.tot<-total.sum.sqrs(soil.system)
-  return(ss.tot)
+b.div.wrap<-function(soil.system){
+  system.sum.sqrs<-sqrd.diffs(soil.system)
+  total.var<-b.div(soil.system)
+  species.cont<-species.cont.bdiv(system.sum.sqrs)
+  sample.cont<-local.cont.bdiv(system.sum.sqrs)
+  return(list(total=total.var,species=species.cont,sites=sample.cont))
 }
-
-
 
