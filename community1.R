@@ -51,10 +51,27 @@ local.cont.bdiv<-function(system.sum.sqrs){
   return(lcbd)
 }
 
+#'Wraps the functions in order to return (1) total variance in the system, (2) the species contributions
+#'   to beta diversity, and (3) the local contributions to beta diversity. 
 b.div.wrap<-function(soil.system){
   system.sum.sqrs<-sqrd.diffs(soil.system)
-  total.var<-b.div(soil.system)
+  total.var<-b.div(system.sum.sqrs)
   species.cont<-species.cont.bdiv(system.sum.sqrs)
   sample.cont<-local.cont.bdiv(system.sum.sqrs)
   return(list(total=total.var,species=species.cont,sites=sample.cont))
 }
+
+#'Calculates the beta diversity using the three different methods presented by Legendre
+b.div.forked<-function(soil.system){
+  system.sum.sqrs<-sqrd.diffs(soil.system)
+  #Legendre(3[species])
+  species.fork<-sum(species.ss(system.sum.sqrs))/(nrow(system.sum.sqrs)-1)
+  #Legendre(3[samples])
+  sample.fork<-sum(sample.ss(system.sum.sqrs))/(nrow(system.sum.sqrs)-1)
+  #Legendre(3[system])
+  total.var<-b.div(system.sum.sqrs)
+  return(list(total=total.var,species=species.fork,sites=sample.fork))
+}
+
+
+
